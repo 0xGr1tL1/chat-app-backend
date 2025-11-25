@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema(
     { timestamps:true}
 );
 
+// Indexes for better query performance
+userSchema.index({ email: 1 });
+userSchema.index({ isOnline: 1 });
+userSchema.index({ isBanned: 1 });
+
 const User = mongoose.model("User",userSchema);
 
 export default User ;

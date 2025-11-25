@@ -1,22 +1,32 @@
-import express from "express";
 import dotenv from "dotenv";
+import express from "express";
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 import manageUsersRoutes from "./routes/manageUsers.route.js";
 import { connectDB } from "./lib/db.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import { app, server } from "./lib/socket.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
 
-const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
 }));
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/message',messageRoutes);
 app.use('/api/manageUsers',manageUsersRoutes);
@@ -24,11 +34,11 @@ app.use('/api/manageUsers',manageUsersRoutes);
 
 
 app.get("/", (req, res) => {
-    res.send("Server is working!");
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`running on port ${PORT}`);
+    server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
     });
 });

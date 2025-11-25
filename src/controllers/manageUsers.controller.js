@@ -57,7 +57,7 @@ export const unbanUser = async (req , res) =>{
 export const getBnnedUsers = async (req,res) =>{
     try {
         if (req.user.isAdmin === false) {
-            return res.status;(403).json({error: "You are not authorized to view banned users"});
+            return res.status(403).json({error: "You are not authorized to view banned users"});
         }
         const bannedUsers = await User.find({isBanned:true}).select("-password");
         res.status(200).json(bannedUsers);

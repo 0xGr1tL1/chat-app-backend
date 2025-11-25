@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import { generateToken } from "../lib/utilis.js";
-import cloufdinary from "../lib/cloudnary.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const signup = async (req, res) => {
     const { fullName, password, email } = req.body;
@@ -80,6 +80,7 @@ export const login = async (req, res) => {
             return res.status(400).json({ error: "Invalid credentials!" });
         }
         user.isOnline = true; // set user as online
+        await user.save(); // Save online status to database
         
         generateToken(user._id,res) 
         res.status(200).json({
@@ -96,13 +97,15 @@ export const login = async (req, res) => {
     }
 }
 
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
     try {
-
+        const userId = req.user._id;
+        // Set user as offline in database
+        await User.findByIdAndUpdate(userId, { isOnline: false });
+        
         // Clear the cookie by setting its maxAge to 0
         res.cookie("jwt","",{maxAge:0})
         res.status(200).json({message:"Logged out successfully"})
-        req.user.isOnline = false; // set user as offline
     } catch (error) {
         console.log(`Error while logging out : ${error.message}`);
         res.status(500).json({message:"Internal server error"})
@@ -118,7 +121,7 @@ export const updateProfile = async (req,res)=>{
             return res.status(400).json({message:"Profile picutre is required"});
 
         }
-        const uploadResponse = await cloufdinary.uploader.upload(profilePic)
+        const uploadResponse = await cloudinary.uploader.upload(profilePic)
         console.log("Upload response:", uploadResponse);
         await User.findByIdAndUpdate(userId, {
             profilePic: uploadResponse.secure_url
